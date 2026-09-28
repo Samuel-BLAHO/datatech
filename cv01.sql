@@ -1,3 +1,4 @@
+--Uloha 1
 CREATE DATABASE superstore;
 
 CREATE TABLE customers
@@ -30,5 +31,15 @@ CREATE Table orders(
     Foreign Key (product_id) REFERENCES products (product_id)
 );
 
-SELECT * FROM customers;
-SELECT * FROM products;
+--Uloha 2
+SELECT o.order_id,c.customer_name,o.sales FROM orders o INNER JOIN customers c ON c.customer_id = o.customer_id WHERE o.sales>500;
+
+--Uloha 3
+SELECT o.order_id,c.customer_name,p.category,o.sales FROM orders o inner JOIN customers c on c.customer_id = o.customer_id 
+inner JOIN products p on p.product_id= o.product_id;
+
+--Uloha 4
+SELECT c.region,SUM(o.sales) FROM customers c inner JOIN orders o on o.customer_id = c.customer_id GROUP BY c.region;
+
+--Uloha 5
+SELECT p.product_name,Sum(o.sales) FROM products p INNER JOIN orders o on o.product_id=p.product_id GROUP BY p.product_name;
