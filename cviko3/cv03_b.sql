@@ -156,7 +156,7 @@ cumulative_target AS (
 
     SELECT
         next_month.rn,
-        next_month.month,
+        next_month.month, 
         next_month.revenue,
         current_month.cumulative_revenue + next_month.revenue
     FROM cumulative_target current_month
