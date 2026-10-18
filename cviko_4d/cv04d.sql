@@ -107,3 +107,65 @@ select category, product_name, product_sales, category_total,
 ROUND(product_sales* 100.0 /category_total,2) AS pct_of_category
 from category_totals;
 
+--Uloha6
+with last_orders as(
+    select c.customer_id, c.customer_name, 
+    max(o.order_date) over(partition by c.customer_id) as last_order_date,
+    max(o.order_date) over() as latest_order_date
+    from orders o
+    inner join customers c on o.customer_id=c.customer_id
+)
+Select customer_id, customer_name, last_order_date
+from last_orders 
+where last_order_date> latest_order_date - INTERVAL '90 days' 
+ORDER BY last_order_date ASC;
+    
+--Uloha7
+with month_sales as(
+    select date_trunc('month', order_date) as month, sum(sales) as monthly_sales
+    from orders 
+    group by month
+),month_sales_with_lag as(
+    select month, monthly_sales,
+    lag(monthly_sales) over(order by month) as prev_month_sales
+    from month_sales
+)
+select month,monthly_sales,prev_month_sales,
+monthly_sales - prev_month_sales as sales_change,
+round(((monthly_sales - prev_month_sales)
+ / prev_month_sales) * 100,2) as growth_percentage
+ from month_sales_with_lag;
+
+
+--Uloha8
+with first_orders as(
+    select customer_id, date_trunc('month', order_date) as month, 
+    min(order_date) over(partition by customer_id) as first_order_date
+    from orders 
+),filtered_first_orders as(
+    select customer_id, month, first_order_date
+    from first_orders
+    where first_order_date <= '2024-06-01' and first_order_date >= '2024-06-30'
+)
+select count(distinct f.customer_id) as filtered_customers
+from filtered_first_orders f
+inner join orders o on f.customer_id=o.customer_id
+where f.first_order_date<o.order_date;
+
+--chatGPT version
+WITH first_orders AS (
+    SELECT
+        customer_id,
+        DATE_TRUNC('month', MIN(order_date)) AS first_order_month
+    FROM orders
+    GROUP BY customer_id
+)
+SELECT COUNT(*) AS returned_customers
+FROM first_orders f
+WHERE f.first_order_month = DATE '2024-06-01'
+  AND EXISTS (
+      SELECT 1
+      FROM orders o
+      WHERE o.customer_id = f.customer_id
+        AND DATE_TRUNC('month', o.order_date) > f.first_order_month
+  );
